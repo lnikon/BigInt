@@ -33,19 +33,17 @@ BigInt BigInt::operator=(const BigInt &ob)
 
 BigInt::BigInt(BigInt &&)
 {
-
 }
 
 BigInt BigInt::operator=(BigInt &&)
 {
-
 }
 
 // ===================================
 // Getters and Setters
 // ===================================
 
-const std::string& BigInt::getNumber() const
+const std::string &BigInt::getNumber() const
 {
     return m_number;
 }
@@ -128,7 +126,7 @@ std::string BigInt::add(std::string left,
     return temp;
 }
 
-std::string BigInt::add(std::string right)
+std::string BigInt::add(const std::string &right)
 {
     return add(m_number, right);
 }
@@ -150,9 +148,9 @@ std::string BigInt::sub(std::string left,
 
     temp = left;
 
-    for(int i = left.length() - 1; i >= 0; --i)
+    for (int i = left.length() - 1; i >= 0; --i)
     {
-        if(left[i] < right[i])
+        if (left[i] < right[i])
         {
             left[i] += 10;
             left[i - 1] -= 1;
@@ -160,7 +158,7 @@ std::string BigInt::sub(std::string left,
         temp[i] = ((left[i] - '0') - (right[i] - '0')) + '0';
     }
 
-    while(temp[0] == '0' && temp.length() != 1)
+    while (temp[0] == '0' && temp.length() != 1)
     {
         temp.erase(0, 1);
     }
@@ -176,11 +174,62 @@ std::string BigInt::sub(const std::string &right)
 std::string BigInt::mul(std::string left,
                         std::string right)
 {
+    std::string temp1 = "0";
+    std::string temp2 = "0";
+    auto diff = std::abs((int)left.length() - (int)right.length());
+
+    if (left.length() > right.length())
+    {
+        right.insert(0, diff, '0');
+    }
+    else if (left.length() < right.length())
+    {
+        left.insert(0, diff, '0');
+    }
+
+    for (int i = left.length() - 1; i >= 0; --i)
+    {
+        temp2 = right;
+        int rem = 0;
+        int curd = left[i] - '0';
+        for (int j = right.length() - 1; j >= 0; --j)
+        {
+            temp2[j] = ((temp2[j] - '0') * curd) + rem;
+
+            if (temp2[j] > 9)
+            {
+                rem = temp2[j] / 10;
+                temp2[j] -= rem * 10;
+            }
+            else
+            {
+                rem = 0;
+            }
+
+            temp2[j] += '0';
+        }
+
+        if (rem > 0)
+        {
+            temp2.insert(0, 1, rem + '0');
+        }
+
+        temp2.append(left.length() - i - 1, '0');
+
+        temp1 = add(temp1, temp2);
+    }
+
+    while (temp1[0] == '0' && temp1.length() != 1)
+    {
+        temp1.erase(0, 1);
+    }
+
+    return temp1;
 }
 
 std::string BigInt::mul(const std::string &right)
 {
-    mul(getNumber(), right);
+    return mul(getNumber(), right);
 }
 
 std::string BigInt::div(std::string left,
@@ -190,7 +239,7 @@ std::string BigInt::div(std::string left,
 
 std::string BigInt::div(const std::string &right)
 {
-    div(getNumber(), right);
+    return div(getNumber(), right);
 }
 
 // ===================================
@@ -201,14 +250,14 @@ BigInt BigInt::operator+(BigInt ob)
 {
     BigInt temp("0");
 
-    if(getSign() == ob.getSign())
+    if (getSign() == ob.getSign())
     {
         temp.setNumber(add(getNumber(), ob.getNumber()));
         temp.setSign(ob.getSign());
     }
     else
     {
-        if(abs() > ob.abs())
+        if (abs() > ob.abs())
         {
             temp.setNumber(sub(getNumber(), ob.getNumber()));
             temp.setSign(getSign());
@@ -220,7 +269,7 @@ BigInt BigInt::operator+(BigInt ob)
         }
     }
 
-    if(temp.getNumber()  == "0")
+    if (temp.getNumber() == "0")
     {
         temp.setSign(false);
     }
@@ -236,42 +285,149 @@ BigInt BigInt::operator-(BigInt ob)
 
 BigInt BigInt::operator*(BigInt ob)
 {
+    BigInt temp("0");
 
+    temp.setNumber(mul(getNumber(), ob.getNumber()));
+    if (getSign() == ob.getSign())
+    {
+        temp.setSign(false);
+    }
+    else
+
+    {
+        temp.setSign(true);
+    }
+    return temp;
 }
 
 BigInt BigInt::operator/(BigInt ob)
 {
-
 }
 
-bool BigInt::operator>(const BigInt & ob)
+BigInt BigInt::operator++()
+{
+    *this += BigInt("+1");
+    return BigInt(getNumber(), getSign());
+}
+
+BigInt BigInt::operator++(int)
+{
+    BigInt ob(getNumber(), getSign());
+
+    *this += BigInt("+1");
+
+    return ob;
+}
+
+BigInt BigInt::operator--()
+{
+    *this -= BigInt("+1");
+    return BigInt(getNumber(), getSign());
+}
+
+BigInt BigInt::operator--(int)
+{
+    BigInt ob(getNumber(), getSign());
+
+    *this -= BigInt("+1");
+
+    return ob;
+}
+
+BigInt BigInt::operator+=(const BigInt &other)
+{
+    auto res = BigInt(getNumber(), getSign()) + other;
+
+    this->setNumber(res.getNumber());
+    this->setSign(res.getSign());
+
+    return res;
+}
+
+BigInt BigInt::operator-=(const BigInt &other)
+{
+    auto res = BigInt(getNumber(), getSign()) - other;
+
+    this->setNumber(res.getNumber());
+    this->setSign(res.getSign());
+
+    return res;
+}
+
+BigInt BigInt::operator*=(const BigInt &other)
+{
+    auto res = BigInt(getNumber(), getSign()) * other;
+
+    this->setNumber(res.getNumber());
+    this->setSign(res.getSign());
+
+    return res;
+}
+
+BigInt BigInt::operator/=(const BigInt &)
+{
+}
+
+bool BigInt::operator>(const BigInt &ob)
 {
     return greater(*this, ob);
 }
 
-bool BigInt::operator<(const BigInt & ob)
+bool BigInt::operator<(const BigInt &ob)
 {
     return less(*this, ob);
 }
 
-bool BigInt::operator==(const BigInt & ob)
+bool BigInt::operator==(const BigInt &ob)
 {
     return equal(*this, ob);
 }
 
-bool BigInt::operator>=(const BigInt & ob)
+bool BigInt::operator>=(const BigInt &ob)
 {
     return greaterOrEqual(*this, ob);
 }
 
-bool BigInt::operator<=(const BigInt & ob)
+bool BigInt::operator<=(const BigInt &ob)
 {
     return lesserOrEqual(*this, ob);
 }
 
-bool BigInt::operator!=(const BigInt & ob)
+bool BigInt::operator!=(const BigInt &ob)
 {
     return notEqual(*this, ob);
+}
+
+// ===================================
+// Stream operators
+// ===================================
+
+std::ostream &operator<<(std::ostream &out,
+                         const BigInt &ob)
+{
+    std::string sign;
+    if (!ob.getSign())
+    {
+        sign = "+";
+    }
+    else
+    {
+        sign = "-";
+    }
+
+    out << sign << ob.getNumber() << "\n";
+    return out;
+}
+
+std::istream &operator>>(std::istream &in,
+                         BigInt &ob)
+{
+    std::string number;
+    in >> number;
+
+    ob.setNumber(number);
+
+    return in;
 }
 
 // ===================================
@@ -289,29 +445,29 @@ bool BigInt::less(const BigInt &left,
                   const BigInt &right)
 {
     // -left/+right
-    if((left.getSign() == true) && (right.getSign() == false))
+    if ((left.getSign() == true) && (right.getSign() == false))
     {
         // left < right
         return true;
     }
     // +left/-right
-    else if((left.getSign() == false) && (right.getSign() == true))
+    else if ((left.getSign() == false) && (right.getSign() == true))
     {
         // left > right
         return false;
     }
     // +left/+right
-    else if((left.getSign() == false) && (right.getSign() == false))
+    else if ((left.getSign() == false) && (right.getSign() == false))
     {
-        if(left.getNumber().length() > right.getNumber().length())
+        if (left.getNumber().length() > right.getNumber().length())
         {
             return false;
         }
-        else if(left.getNumber().length() < right.getNumber().length())
+        else if (left.getNumber().length() < right.getNumber().length())
         {
             return true;
         }
-        else 
+        else
         {
             return left.getNumber() < right.getNumber();
         }
@@ -365,4 +521,19 @@ bool BigInt::notEqual(const BigInt &left,
 BigInt BigInt::abs()
 {
     return BigInt(getNumber(), false);
+}
+
+BigInt BigInt::factorial()
+{
+    BigInt res("1");
+    BigInt copy(getNumber(), getSign());
+
+
+    while (copy != BigInt("0"))
+    {
+        res *= copy;
+        copy--;
+    }
+
+    return res;
 }
